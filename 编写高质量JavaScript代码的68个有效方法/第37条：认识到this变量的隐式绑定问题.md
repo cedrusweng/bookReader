@@ -1,4 +1,3 @@
-
 ---
 title: 第37条：认识到this变量的隐式绑定问题
 tags: 编写高质量javascript代码的68条有效方法
