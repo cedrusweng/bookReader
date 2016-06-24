@@ -19,7 +19,7 @@ var dict={};
 'valueOf' in dict;//true
 ```
 无法避免从Object.prototype对象继承方法。
-
+## 去除原型污染
 Object.prototype提供了hasOwnProperty方法。当测试字典条目时，它可以避免原型污染，这正好可以解决之前的问题。看一段代码
 ```js
 dict.hasOwnProperty('zhangsan');//false
@@ -36,7 +36,9 @@ dict.hasOwnProperty('x')?dict.hasOwnProperty('x'):undefined;
 dict.hasOwnProperty=10;
 dict.hasOwnProperty('zhangsan');//这里会产生一个错误
 ```
-虽然字典很少会存储这样的属性名。但小概率事件也会发生，因为你不知道处理的数据，是不是来自第三方。下面就介绍一种最安全的方法，不做任何假设。这里不用字典对象来访问hasOwnProperty方法，可能被改写。这里直接使用Object.prototype中的hasOwnProperty方法，然后使用函数的call方法，把函数的接收者绑定到字典对象。
+虽然字典很少会存储这样的属性名。但小概率事件也会发生，因为你不知道处理的数据，是不是来自第三方。下面就介绍一种最安全的方法，不做任何假设。这里不用字典对象来访问hasOwnProperty方法，可能被改写。
+### 使用Object.prototpye.hasOwnProperty
+这里直接使用Object.prototype中的hasOwnProperty方法，然后使用函数的call方法，把函数的接收者绑定到字典对象。
 首先，先提取出hasOwnProperty方法
 ```js
 var hasOwn=Object.prototype.hasOwnProperty;
@@ -60,7 +62,9 @@ dict.hasOwnProperty=10;
 hasOwn.call(dict,'hasOwnProperty');//true
 hasOwn.call(dict,'zhangsan');//true
 ```
-为了避免所以地方都插入上面的检测代码，可以把该模式抽象为Dict的方法。Dict构造函数封装了所有在单一数据类型定义中编写健壮字典的技术细节。代码好下
+为了避免所以地方都插入上面的检测代码，可以把该模式抽象为Dict的方法。
+## Dict初级版
+Dict构造函数封装了所有在单一数据类型定义中编写健壮字典的技术细节。代码好下
 ```js
 function Dict(elements){
     this.elements=elements||{};
@@ -89,6 +93,7 @@ dict.has('zhangsang');//true
 dict.has('lisi');//true
 dict.has('toString');//false
 ```
+## __proto__自身污染
 之前在44条中提到，在一些特殊js环境中，特殊的属性名__proto__可能导致自身的污染问题。在某些环境中,__proto__只是简单地继承自Object.prototype，因此空对象是真正的空对象。
 一些环境下
 ```js
@@ -117,7 +122,9 @@ hasOwn.call(empty,'__proto__');//true
 var dict=new Dict();
 dict.has('__proto__');//无法确定
 ```
-为了达到代码的可移植性和安全性，只能对__proto__关键字增加一些操作。下面就是Dict更安全、更复杂的最终实现。
+为了达到代码的可移植性和安全性，只能对__proto__关键字增加一些操作。
+## Dict最终版
+下面就是Dict更安全、更复杂的最终实现。
 ```js
 function Dict(elements){
     this.elements=elements||{};
